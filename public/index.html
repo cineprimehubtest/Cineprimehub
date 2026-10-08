@@ -614,12 +614,7 @@ async function searchFiles(reset = true) {
             );
 
         if (!response.ok) {
-            let detail = "HTTP " + response.status;
-            try {
-                const err = await response.json();
-                detail += " | " + (err.type || "") + " | " + (err.message || err.error || "");
-            } catch (e) {}
-            throw new Error(detail);
+            throw new Error("API error");
         }
 
         const data =
@@ -672,8 +667,6 @@ async function searchFiles(reset = true) {
                     ⚠️ Unable to connect to search API.
                     <br><br>
                     Check your Vercel deployment and MongoDB connection.
-                    <br><br>
-                    <small style="opacity:.7;word-break:break-word;">${String(error && error.message || "").replace(/</g,"&lt;")}</small>
                 </div>
             `;
 
@@ -838,18 +831,44 @@ function renderFile(file) {
 }
 
 
+function formatBytes(bytes) {
+
+    const n = Number(bytes);
+
+    if (!Number.isFinite(n) || n <= 0) {
+        return "";
+    }
+
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let i = 0;
+    let v = n;
+
+    while (v >= 1024 && i < units.length - 1) {
+        v /= 1024;
+        i++;
+    }
+
+    return v.toFixed(i >= 3 ? 2 : 0) + " " + units[i];
+}
+
+
 function extractSize(file) {
 
     if (file.file_size) {
-        return String(file.file_size);
+
+        const formatted = formatBytes(file.file_size);
+
+        if (formatted) {
+            return formatted;
+        }
     }
 
     const caption =
-        file.caption || "";
+        String(file.caption || "").replace(/<[^>]*>/g, " ");
 
     const match =
         caption.match(
-            /(?:Size|size)\s*:\s*([^<\n]+)/i
+            /Size\s*:\s*([\d.,]+\s*(?:TB|GB|MB|KB|B))/i
         );
 
     return match

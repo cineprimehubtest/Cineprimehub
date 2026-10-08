@@ -84,13 +84,6 @@ module.exports = async function handler(req, res) {
     console.error("Code:", error?.code);
     console.error("CodeName:", error?.codeName);
     console.error("=========================");
-    // TEMPORARY diagnostics - remove "type" and "message" once fixed
-    res.status(500).json({
-      error: "Database search failed",
-      type: error?.name,
-      message: String(error?.message || "")
-        .replace(/mongodb(\+srv)?:\/\/[^\s]+/gi, "mongodb://***")
-        .slice(0, 300),
-    });
+    res.status(500).json({ error: "Database search failed" });
   }
 };
