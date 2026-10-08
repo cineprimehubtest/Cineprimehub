@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CINEPLEX - Telegram File Search</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 15% 10%, #21160d 0%, transparent 30%),
+        radial-gradient(circle at 85% 30%, #1b0d17 0%, transparent 32%),
+        #070707;
+    color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* SPACE STARS */
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .35;
+    background-image:
+        radial-gradient(1px 1px at 5% 15%, white, transparent),
+        radial-gradient(1px 1px at 15% 55%, white, transparent),
+        radial-gradient(1px 1px at 25% 25%, white, transparent),
+        radial-gradient(1px 1px at 35% 75%, white, transparent),
+        radial-gradient(1px 1px at 45% 35%, white, transparent),
+        radial-gradient(1px 1px at 55% 15%, white, transparent),
+        radial-gradient(1px 1px at 65% 65%, white, transparent),
+        radial-gradient(1px 1px at 75% 30%, white, transparent),
+        radial-gradient(1px 1px at 85% 80%, white, transparent),
+        radial-gradient(1px 1px at 95% 20%, white, transparent);
+}
+
+/* HEADER */
+
+.header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: rgba(10, 8, 7, .9);
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    backdrop-filter: blur(12px);
+}
+
+.logo {
+    color: #e8c982;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 4px;
+}
+
+.theme {
+    width: 38px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20px;
+    background: #171717;
+    border: 1px solid #292929;
+    color: #ffd75c;
+}
+
+/* CONTAINER */
+
+.container {
+    width: 94%;
+    max-width: 1050px;
+    margin: auto;
+    padding: 25px 0 50px;
+}
+
+/* SEARCH PANEL */
+
+.search-panel {
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid #292929;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(25,25,25,.95),
+            rgba(9,9,9,.95)
+        );
+    box-shadow: 0 15px 50px rgba(0,0,0,.35);
+}
+
+.search-row {
+    display: flex;
+    gap: 8px;
+}
+
+.search-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #777;
+}
+
+#searchInput {
+    width: 100%;
+    height: 48px;
+    padding: 0 42px;
+    border-radius: 10px;
+    border: 1px solid #292929;
+    outline: none;
+    background: #0b0b0b;
+    color: white;
+    font-size: 14px;
+}
+
+#searchInput:focus {
+    border-color: #a16f28;
+    box-shadow: 0 0 18px rgba(200,140,40,.12);
+}
+
+#searchInput::placeholder {
+    color: #777;
+}
+
+.clear-input {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #777;
+    cursor: pointer;
+}
+
+.search-btn {
+    width: 58px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: white;
+    font-size: 19px;
+    background: linear-gradient(135deg,#ffbd3c,#ff6f20);
+}
+
+.search-btn:hover {
+    box-shadow: 0 0 22px rgba(255,145,40,.4);
+}
+
+.search-btn:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+/* FILTERS */
+
+.filter-title {
+    margin: 20px 0 9px;
+    color: #777;
+    font-size: 9px;
+    letter-spacing: 3px;
+}
+
+.filters {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.filters::-webkit-scrollbar {
+    display: none;
+}
+
+.filter {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    border-radius: 9px;
+    border: 1px solid #282828;
+    background: #151515;
+    color: #aaa;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.filter:hover,
+.filter.active {
+    background: #2a2115;
+    border-color: #a16f28;
+    color: #ffd27a;
+}
+
+/* RESULTS HEADER */
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 28px 0 12px;
+}
+
+.count {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.count span {
+    font-size: 10px;
+    font-weight: normal;
+    color: #888;
+}
+
+.clear-results {
+    padding: 7px 12px;
+    border: 1px solid #222;
+    border-radius: 8px;
+    background: #0c0c0c;
+    color: #777;
+    cursor: pointer;
+    font-size: 10px;
+}
+
+/* FILE CARD */
+
+.file-card {
+    position: relative;
+    display: flex;
+    min-height: 120px;
+    padding: 10px;
+    margin-bottom: 9px;
+    border-radius: 12px;
+    border: 1px solid #282828;
+    background:
+        linear-gradient(
+            100deg,
+            rgba(24,22,22,.96),
+            rgba(15,14,15,.94)
+        );
+    transition: .2s;
+}
+
+.file-card:hover {
+    border-color: #555;
+    transform: translateY(-1px);
+}
+
+.poster {
+    width: 68px;
+    height: 96px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #151515;
+}
+
+.poster-placeholder {
+    width: 68px;
+    height: 96px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background:
+        linear-gradient(
+            145deg,
+            #123b43,
+            #071315
+        );
+    font-size: 25px;
+}
+
+.file-content {
+    padding: 2px 10px;
+    padding-right: 55px;
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    color: #e8e8e8;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.title {
+    margin-top: 5px;
+    color: #999;
+    font-size: 10px;
+}
+
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.badge {
+    padding: 4px 7px;
+    border-radius: 4px;
+    background: #171717;
+    color: #aaa;
+    font-size: 8px;
+}
+
+.badge.quality {
+    color: #e5a75a;
+    background: #21180f;
+}
+
+.rating {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    padding: 4px 7px;
+    border-radius: 6px;
+    background: #302713;
+    color: #f4c85e;
+    font-size: 9px;
+}
+
+.bottom {
+    position: absolute;
+    bottom: 10px;
+    left: 88px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.size {
+    color: #888;
+    font-size: 9px;
+}
+
+.info {
+    color: #888;
+    font-size: 9px;
+    cursor: pointer;
+}
+
+.info:hover {
+    color: white;
+}
+
+.copy-btn {
+    margin-left: 10px;
+    border: 0;
+    background: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 9px;
+}
+
+.copy-btn:hover {
+    color: #fff;
+}
+
+/* LOAD MORE */
+
+.load-more-container {
+    text-align: center;
+    margin: 25px 0;
+}
+
+.load-more {
+    padding: 11px 25px;
+    border: 1px solid #393939;
+    border-radius: 9px;
+    background: #121212;
+    color: #ddd;
+    cursor: pointer;
+}
+
+.load-more:hover {
+    border-color: #a16f28;
+}
+
+/* EMPTY */
+
+.empty {
+    padding: 45px 20px;
+    text-align: center;
+    color: #666;
+    border: 1px solid #1c1c1c;
+    border-radius: 12px;
+    background: #0b0b0b;
+}
+
+/* MOBILE */
+
+@media(max-width:600px) {
+
+    .container {
+        width: 94%;
+        padding-top: 18px;
+    }
+
+    .search-row {
+        gap: 6px;
+    }
+
+    .search-btn {
+        width: 52px;
+    }
+
+    .file-card {
+        min-height: 112px;
+    }
+
+    .poster,
+    .poster-placeholder {
+        width: 60px;
+        height: 86px;
+    }
+
+    .bottom {
+        left: 80px;
+    }
+
+    .file-content {
+        padding-right: 42px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="logo">CINEPLEX</div>
+    <div class="theme">☾</div>
+</header>
+
+<main class="container">
+
+<section class="search-panel">
+
+    <div class="search-row">
+
+        <div class="search-wrapper">
+
+            <span class="search-icon">⌕</span>
+
+            <input
+                id="searchInput"
+                type="text"
+                placeholder="Search movies, series, files..."
+                autocomplete="off"
+            >
+
+            <span
+                class="clear-input"
+                onclick="clearSearch()"
+            >×</span>
+
+        </div>
+
+        <button
+            id="searchButton"
+            class="search-btn"
+            onclick="searchFiles()"
+        >➜</button>
+
+    </div>
+
+    <div class="filter-title">QUALITY</div>
+
+    <div class="filters">
+
+        <button class="filter active" data-quality="">All</button>
+        <button class="filter" data-quality="1080p">1080p</button>
+        <button class="filter" data-quality="720p">720p</button>
+        <button class="filter" data-quality="480p">480p</button>
+        <button class="filter" data-quality="360p">360p</button>
+        <button class="filter" data-quality="240p">240p</button>
+        <button class="filter" data-quality="HDR">HDR</button>
+        <button class="filter" data-quality="10bit">10bit</button>
+        <button class="filter" data-quality="HEVC">HEVC</button>
+        <button class="filter" data-quality="BluRay">BluRay</button>
+
+    </div>
+
+    <div class="filter-title">LANGUAGE</div>
+
+    <div class="filters">
+
+        <button class="filter language active" data-language="">All</button>
+        <button class="filter language" data-language="Malayalam">Malayalam</button>
+        <button class="filter language" data-language="English">English</button>
+        <button class="filter language" data-language="Tamil">Tamil</button>
+        <button class="filter language" data-language="Telugu">Telugu</button>
+        <button class="filter language" data-language="Hindi">Hindi</button>
+        <button class="filter language" data-language="Korean">Korean</button>
+        <button class="filter language" data-language="Kannada">Kannada</button>
+        <button class="filter language" data-language="Chinese">Chinese</button>
+        <button class="filter language" data-language="Japanese">Japanese</button>
+
+    </div>
+
+</section>
+
+<div class="results-header">
+
+    <div class="count">
+        <span id="resultCount">0</span>
+        <span>matches</span>
+    </div>
+
+    <button
+        class="clear-results"
+        onclick="clearSearch()"
+    >Clear</button>
+
+</div>
+
+<div id="results"></div>
+
+<div
+    id="loadMoreContainer"
+    class="load-more-container"
+    style="display:none"
+>
+    <button
+        class="load-more"
+        onclick="loadMore()"
+    >
+        Load More
+    </button>
+</div>
+
+</main>
+
+
+<script>
+
+let currentPage = 1;
+let currentQuery = "";
+let currentQuality = "";
+let currentLanguage = "";
+let hasMore = false;
+
+
+const input =
+    document.getElementById("searchInput");
+
+const results =
+    document.getElementById("results");
+
+const statusCount =
+    document.getElementById("resultCount");
+
+const searchButton =
+    document.getElementById("searchButton");
+
+const loadMoreContainer =
+    document.getElementById("loadMoreContainer");
+
+
+async function searchFiles(reset = true) {
+
+    const query =
+        input.value.trim();
+
+    if (reset) {
+        currentPage = 1;
+        results.innerHTML = "";
+    }
+
+    currentQuery = query;
+
+    searchButton.disabled = true;
+
+    searchButton.textContent = "…";
+
+    try {
+
+        const params = new URLSearchParams();
+
+        params.set("q", currentQuery);
+        params.set("page", currentPage);
+        params.set("limit", "50");
+
+        if (currentQuality) {
+            params.set("quality", currentQuality);
+        }
+
+        if (currentLanguage) {
+            params.set("language", currentLanguage);
+        }
+
+        const response =
+            await fetch(
+                "/api/search?" + params.toString()
+            );
+
+        if (!response.ok) {
+            throw new Error("API error");
+        }
+
+        const data =
+            await response.json();
+
+        if (reset) {
+            results.innerHTML = "";
+        }
+
+        const list =
+            data.results || [];
+
+        if (reset && list.length === 0) {
+
+            statusCount.textContent = "0";
+
+            results.innerHTML = `
+                <div class="empty">
+                    🌌<br><br>
+                    No files found
+                </div>
+            `;
+
+            loadMoreContainer.style.display = "none";
+
+            return;
+        }
+
+        list.forEach(renderFile);
+
+        statusCount.textContent =
+            reset
+            ? list.length
+            : results.querySelectorAll(".file-card").length;
+
+        hasMore =
+            data.hasMore === true;
+
+        loadMoreContainer.style.display =
+            hasMore ? "block" : "none";
+
+    } catch (error) {
+
+        console.error(error);
+
+        if (reset) {
+
+            results.innerHTML = `
+                <div class="empty">
+                    ⚠️ Unable to connect to search API.
+                    <br><br>
+                    Check your Vercel deployment and MongoDB connection.
+                </div>
+            `;
+
+        }
+
+    } finally {
+
+        searchButton.disabled = false;
+
+        searchButton.textContent = "➜";
+
+    }
+}
+
+
+function renderFile(file) {
+
+    const card =
+        document.createElement("div");
+
+    card.className = "file-card";
+
+
+    const fileName =
+        file.file_name || "Unknown file";
+
+    const title =
+        file.title || "";
+
+    const rating =
+        file.rating !== undefined &&
+        file.rating !== null
+        ? file.rating
+        : "";
+
+    const size =
+        extractSize(file);
+
+
+    let poster = "";
+
+    if (file.poster_url) {
+
+        poster = `
+            <img
+                class="poster"
+                src="${escapeHTML(file.poster_url)}"
+                alt=""
+                loading="lazy"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+            >
+            <div
+                class="poster-placeholder"
+                style="display:none"
+            >🎬</div>
+        `;
+
+    } else {
+
+        poster = `
+            <div class="poster-placeholder">
+                🎬
+            </div>
+        `;
+
+    }
+
+
+    const quality =
+        detectQuality(fileName);
+
+    const year =
+        detectYear(fileName) ||
+        detectYear(title);
+
+
+    card.innerHTML = `
+
+        ${poster}
+
+        <div class="file-content">
+
+            <div class="file-name">
+                ${escapeHTML(fileName)}
+            </div>
+
+            ${
+                title
+                ? `
+                <div class="title">
+                    ${escapeHTML(title)}
+                </div>
+                `
+                : ""
+            }
+
+            <div class="badges">
+
+                ${
+                    quality
+                    ? `
+                    <span class="badge quality">
+                        ${escapeHTML(quality)}
+                    </span>
+                    `
+                    : ""
+                }
+
+                ${
+                    year
+                    ? `
+                    <span class="badge">
+                        ${escapeHTML(year)}
+                    </span>
+                    `
+                    : ""
+                }
+
+            </div>
+
+        </div>
+
+        ${
+            rating !== ""
+            ? `
+            <div class="rating">
+                ★ ${escapeHTML(String(rating))}
+            </div>
+            `
+            : ""
+        }
+
+        <div class="bottom">
+
+            <div class="size">
+                ▱ ${escapeHTML(size)}
+            </div>
+
+            <div>
+
+                <button
+                    class="copy-btn"
+                    onclick="copyFileId('${escapeHTML(file.file_id || "")}')"
+                >
+                    Copy ID
+                </button>
+
+                <span
+                    class="info"
+                    onclick='showInfo(${JSON.stringify(file)})'
+                >
+                    ⓘ Info
+                </span>
+
+            </div>
+
+        </div>
+    `;
+
+
+    results.appendChild(card);
+}
+
+
+function extractSize(file) {
+
+    if (file.file_size) {
+        return String(file.file_size);
+    }
+
+    const caption =
+        file.caption || "";
+
+    const match =
+        caption.match(
+            /(?:Size|size)\s*:\s*([^<\n]+)/i
+        );
+
+    return match
+        ? match[1].trim()
+        : "Size unavailable";
+}
+
+
+function detectQuality(name) {
+
+    const qualities = [
+        "2160p",
+        "1080p",
+        "720p",
+        "480p",
+        "360p",
+        "240p"
+    ];
+
+    const lower =
+        name.toLowerCase();
+
+    for (const quality of qualities) {
+
+        if (lower.includes(quality.toLowerCase())) {
+            return quality;
+        }
+
+    }
+
+    if (/\b4k\b/i.test(name)) {
+        return "4K";
+    }
+
+    return "";
+}
+
+
+function detectYear(text) {
+
+    if (!text) return "";
+
+    const match =
+        text.match(
+            /\b(19|20)\d{2}\b/
+        );
+
+    return match
+        ? match[0]
+        : "";
+}
+
+
+function loadMore() {
+
+    if (!hasMore) return;
+
+    currentPage++;
+
+    searchFiles(false);
+}
+
+
+async function copyFileId(id) {
+
+    if (!id) return;
+
+    try {
+
+        await navigator.clipboard.writeText(id);
+
+        alert("File ID copied");
+
+    } catch {
+
+        alert(id);
+
+    }
+}
+
+
+function showInfo(file) {
+
+    const id =
+        file.file_id || "Unavailable";
+
+    const message =
+        file.source_message_id || "Unavailable";
+
+    const chat =
+        file.source_chat_id || "Unavailable";
+
+    alert(
+        "FILE INFORMATION\n\n" +
+        "File: " +
+        (file.file_name || "Unknown") +
+        "\n\n" +
+        "File ID: " +
+        id +
+        "\n\n" +
+        "Message ID: " +
+        message +
+        "\n\n" +
+        "Source Chat ID: " +
+        chat
+    );
+}
+
+
+function clearSearch() {
+
+    input.value = "";
+
+    currentQuery = "";
+
+    currentPage = 1;
+
+    currentQuality = "";
+
+    currentLanguage = "";
+
+
+    document
+        .querySelectorAll(".filter")
+        .forEach(button => {
+            button.classList.remove("active");
+        });
+
+
+    document
+        .querySelector('[data-quality=""]')
+        .classList.add("active");
+
+
+    document
+        .querySelector('[data-language=""]')
+        .classList.add("active");
+
+
+    results.innerHTML = "";
+
+    statusCount.textContent = "0";
+
+    loadMoreContainer.style.display = "none";
+}
+
+
+/* QUALITY FILTERS */
+
+document
+    .querySelectorAll("[data-quality]")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                document
+                    .querySelectorAll("[data-quality]")
+                    .forEach(x =>
+                        x.classList.remove("active")
+                    );
+
+                this.classList.add("active");
+
+                currentQuality =
+                    this.dataset.quality;
+
+                currentPage = 1;
+
+                searchFiles(true);
+            }
+        );
+
+    });
+
+
+/* LANGUAGE FILTERS */
+
+document
+    .querySelectorAll("[data-language]")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                document
+                    .querySelectorAll("[data-language]")
+                    .forEach(x =>
+                        x.classList.remove("active")
+                    );
+
+                this.classList.add("active");
+
+                currentLanguage =
+                    this.dataset.language;
+
+                currentPage = 1;
+
+                searchFiles(true);
+            }
+        );
+
+    });
+
+
+input.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
+            searchFiles(true);
+        }
+
+    }
+);
+
+
+function escapeHTML(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        value == null ? "" : String(value);
+
+    return div.innerHTML;
+}
+
+</script>
+
+</body>
+</html>
