@@ -614,7 +614,12 @@ async function searchFiles(reset = true) {
             );
 
         if (!response.ok) {
-            throw new Error("API error");
+            let detail = "HTTP " + response.status;
+            try {
+                const err = await response.json();
+                detail += " | " + (err.type || "") + " | " + (err.message || err.error || "");
+            } catch (e) {}
+            throw new Error(detail);
         }
 
         const data =
@@ -667,6 +672,8 @@ async function searchFiles(reset = true) {
                     ⚠️ Unable to connect to search API.
                     <br><br>
                     Check your Vercel deployment and MongoDB connection.
+                    <br><br>
+                    <small style="opacity:.7;word-break:break-word;">${String(error && error.message || "").replace(/</g,"&lt;")}</small>
                 </div>
             `;
 
